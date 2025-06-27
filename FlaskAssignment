@@ -1,10 +1,13 @@
 1. Create a Flask application with an /api route. When this route is accessed, it should return a JSON list. The data should be stored in a backend file, read from it, and sent as a response.
 Ans:
-Create a JSON file 'data.json' with some sample list data:
+Install Flask
+piip3 install Flask'
+
+Create a JSON file 'dataa.json' with some sample list data:
 [
-  {"id": 1, "name": "Alice"},
-  {"id": 2, "name": "Bob"},
-  {"id": 3, "name": "Charlie"}
+    {"id": 1, "name": "Alice"},
+    {"id": 2, "name": "Bob"},
+    {"id": 3, "name": "Charlie"}
 ]
 
 Create app.py
@@ -13,22 +16,21 @@ import json
 
 app = Flask(__name__)
 
-@app.route('/api', methods=['GET'])
-def get_data():
+@app.route('/api')
+def api_data():
     try:
-        with open('data.json', 'r') as file:
-            data = json.load(file)
-        return jsonify(data), 200
-    except FileNotFoundError:
-        return jsonify({"error": "Data file not found"}), 404
-    except json.JSONDecodeError:
-        return jsonify({"error": "Error decoding JSON"}), 500
+        with open('dataa.json') as f:
+            data = json.load(f)
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
 
+
 Run app
-python app.py
+python3 app.py
 
 
 2. Create a form on the frontend that, when submitted, inserts data into MongoDB Atlas. Upon successful submission, the user should be redirected to another page displaying the message "Data submitted successfully". If there's an error during submission, display the error on the same page without redirection.
