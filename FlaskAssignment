@@ -36,83 +36,78 @@ python3 app.py
 2. Create a form on the frontend that, when submitted, inserts data into MongoDB Atlas. Upon successful submission, the user should be redirected to another page displaying the message "Data submitted successfully". If there's an error during submission, display the error on the same page without redirection.
 Ans:
 Install the required packages:
-pip install flask pymongo dnspython
+python3 -m pip install "pymongo[srv]==4.1"
 
-app.py
-from flask import Flask, render_template, request, redirect, url_for, flash
+Created cluster on mongo atlas. then created database and collection.
+
+Create template/form.html
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Form</title>
+</head>
+<body>
+    <h2>Enter Details</h2>
+
+    {% if error %}
+        <p style="color:red;">{{ error }}</p>
+    {% endif %}
+
+    <form method="POST">
+        Name: <input type="text" name="name"><br><br>
+        Age: <input type="text" name="age"><br><br>
+        City: <input type="text" name="city"><br><br>
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>
+
+Create app.py
+
+from flask import Flask, render_template, request, redirect, url_for
 from pymongo import MongoClient
-import os
+from pymongo.errors import PyMongoError
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Needed for flashing messages
 
-# MongoDB Atlas connection URI
-MONGO_URI = "mongodb+srv://<username>:<password>@cluster0.mongodb.net/?retryWrites=true&w=majority"
-client = MongoClient(MONGO_URI)
-db = client["testdb"]
-collection = db["testcollection"]
+# Replace this with your actual MongoDB connection string
+client = MongoClient("mongodb+srv://<myusername>:<mypassword>@learnmongo.igevijc.mongodb.net/?retryWrites=true&w=majority&appName=learnmongo")
+db = client["flaskapp"]
+collection = db["flaskapp"]
 
 @app.route('/', methods=['GET', 'POST'])
 def form():
     if request.method == 'POST':
         name = request.form.get('name')
-        email = request.form.get('email')
-        
-        if not name or not email:
-            flash("All fields are required!", "error")
-            return render_template('form.html')
+        age = request.form.get('age')
+        city = request.form.get('city')
 
+        if not name or not age or not city:
+            error = "All fields are required!"
+            return render_template('form.html', error=error)
+
+        # Try inserting into MongoDB
         try:
-            collection.insert_one({"name": name, "email": email})
-            return redirect(url_for('success'))
-        except Exception as e:
-            flash(f"Error: {str(e)}", "error")
-            return render_template('form.html')
+            collection.insert_one({
+                "name": name,
+                "age": int(age),  # Optional: convert age to integer
+                "city": city
+            })
+            return redirect(url_for('form_submitted'))
+        except PyMongoError as e:
+            error = f"Database error: {e}"
+            return render_template('form.html', error=error)
 
     return render_template('form.html')
 
-@app.route('/success')
-def success():
-    return render_template('success.html')
+@app.route('/formsubmitted')
+def form_submitted():
+    return "Form submitted successfully!"
 
 if __name__ == '__main__':
     app.run(debug=True)
 
-templates/form.html
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Submit Form</title>
-</head>
-<body>
-    <h2>Submit Your Info</h2>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <ul>
-                {% for category, message in messages %}
-                    <li style="color: red;">{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-    {% endwith %}
-    <form method="POST">
-        Name: <input type="text" name="name"><br><br>
-        Email: <input type="email" name="email"><br><br>
-        <button type="submit">Submit</button>
-    </form>
-</body>
-</html>
-
-templates/success.html
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Success</title>
-</head>
-<body>
-    <h2>Data submitted successfully!</h2>
-</body>
-</html>
 
 
 
